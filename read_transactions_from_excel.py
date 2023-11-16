@@ -2,11 +2,11 @@ from.settings import MAX_ROW
 import re
 import datetime
 
-class TransactionProcessor:
+class ReadTransactionsFromExcel:
     def __init__(self, sheet, json_dictionary_manager):
         self.sheet = sheet
         self.json_dictionary_manager = json_dictionary_manager
-        self.transactions_per_month = {}
+        self.transactions_per_month_per_category = {}
         self.totals_per_month = {}
         
     def get_transaction(self, date_row):
@@ -111,9 +111,13 @@ class TransactionProcessor:
         '''       
         date_in_datetime = datetime.datetime.strptime(str(date), '%Y%m%d')
         month = date_in_datetime.strftime('%Y-%m')
-        if month not in self.transactions_per_month:
-            self.transactions_per_month[month] = []
-        self.transactions_per_month[month].append(transaction)
+        if month not in self.transactions_per_month_per_category:
+            self.transactions_per_month_per_category[month] = {}
+        
+        if category not in self.transactions_per_month_per_category[month]:
+            self.transactions_per_month_per_category[month][category] = []
+            
+        self.transactions_per_month_per_category[month][category].append(transaction)
         
         if month not in self.totals_per_month:
             self.totals_per_month[month] = {}
@@ -125,43 +129,13 @@ class TransactionProcessor:
         self.totals_per_month[month][category] = self.float_precision(self.totals_per_month[month][category])
         
         #sort transactions by bedrag    
-        for key, value in self.transactions_per_month.items():
+        for key, value in self.transactions_per_month_per_category[month].items():
             if isinstance(value, dict) and 'Totaal' not in value:
                 sorted_nested = dict(sorted(value.items(), key=lambda x: abs(x[1]['Bedrag']), reverse=True))
-                self.transactions_per_month[key] = sorted_nested
+                self.transactions_per_month_per_category[key] = sorted_nested
 
-        return self.transactions_per_month, self.totals_per_month
-# Go through all the transactions in the excel sheet and return 3 values:
-# 1. A dictionary of the transactions per month in this form: {month: {transaction: {date: date, etc: etc}}}
-# 2. A dictionary the toals per month per category in this form: {month: {category: {total: 300}}}
-# 3. An updated version of the category dictionary with the totals per category
+        return self.transactions_per_month_per_category, self.totals_per_month
 
-
-    # Go through the transactions_per_month dictionary and return a dictionary {month: {category{{transaction: {date: date, etc: etc}}}}
-    def get_transactions_per_category(self):
-        '''
-        
-        '''
-        self.transactions_per_month_per_category = {}
-        for maand, list_of_transactions in self.transactions_per_month.items():
-            if maand not in self.transactions_per_month_per_category:
-                self.transactions_per_month_per_category[maand] = {}
-                
-                        
-            for transaction in list_of_transactions:
-                for category in self.json_dictionary_manager.data:
-                    if transaction['Category'] == category:
-                        if category not in self.transactions_per_month_per_category[maand]:
-                            self.transactions_per_month_per_category[maand][category]= {}
-                        self.transactions_per_month_per_category[maand][category][transaction['Naam']] = transaction
-                        if 'Totaal' not in self.transactions_per_month_per_category[maand][category]:
-                            self.transactions_per_month_per_category[maand][category]['Totaal'] = 0
-                        bedrag = transaction['Bedrag']
-                        self.transactions_per_month_per_category[maand][category]['Totaal'] += bedrag
-                        
-        # formatted_data = json.dumps(self.transactions_per_month_per_category, indent=4, sort_keys=True)
-        # print(formatted_data)            
-        return self.transactions_per_month_per_category
     
     #deals with float precision
     def float_precision(self, input):

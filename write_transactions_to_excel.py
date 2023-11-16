@@ -3,7 +3,7 @@ import tkinter as tk
 import sys
 from openpyxl.styles import PatternFill, Font
 
-class ExcelFileProcessor:
+class WriteTransactionsToExcel:
     def __init__(self, filename, json_dict_obj, totals_month, transactions_per_month_per_category) -> None:
         self.filename = filename
         self.data_only = False
@@ -66,6 +66,9 @@ class ExcelFileProcessor:
             row_num += 1
         
     def total_sheet__write_totals_per_month_in_the_next_columns(self):
+        '''
+        pretty self explanitory i think
+        '''
         for month, category_dict in self.totals_month.items():
             
             # Find the first empty column for the date and amounts
