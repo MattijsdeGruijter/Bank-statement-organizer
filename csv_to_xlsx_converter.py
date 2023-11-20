@@ -1,7 +1,7 @@
 import pandas as pd
 
 class CsvToExcelConverter:
-    def __init__(self, input_filename, output_filename=None, delimiter=',') -> None:
+    def __init__(self, input_filename, output_filename=None, delimiter=';') -> None:
         self.input_filename = input_filename
         self.output_filename = output_filename or input_filename.replace('.csv', '.xlsx')
         self.delimiter = delimiter
@@ -14,6 +14,7 @@ class CsvToExcelConverter:
             df = self.read_csv_file()
             self.process_dataframe(df)
             self.save_to_excel(df)
+            return self.output_filename
         except Exception as e:
             print(f"Error: {str(e)}")
 

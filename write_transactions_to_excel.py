@@ -4,12 +4,13 @@ import sys
 from openpyxl.styles import PatternFill, Font
 
 class WriteTransactionsToExcel:
-    def __init__(self, filename, json_dict_obj, totals_month, transactions_per_month_per_category) -> None:
+    def __init__(self, filename, json_dict_obj, totals_month, transactions_per_month_per_category, transactions_per_month) -> None:
         self.filename = filename
         self.data_only = False
         self.json_dict_obj = json_dict_obj
         self.totals_month = totals_month
         self.transactions_per_month_per_category = transactions_per_month_per_category
+        self.transactions_per_month = transactions_per_month
         self.fill = PatternFill(start_color='BFBFBF', end_color='BFBFBF', fill_type="solid")
 
     def open_workbook(self):
@@ -57,7 +58,7 @@ class WriteTransactionsToExcel:
         also format the even rows with a grey color
         '''
         row_num = 2
-        self.totals = self.save_load.data
+        self.totals = self.json_dict_obj.data
         totals_sorted = dict(sorted(self.totals.items(), key=lambda x: abs(x[1]['total']), reverse=True))
         for cat in totals_sorted:
             self.sheet_total.cell(row=row_num, column=1).value = cat
@@ -89,18 +90,22 @@ class WriteTransactionsToExcel:
                         if cat_cell[0].row % 2 == 0:
                             self.sheet_total.cell(row=cat_cell[0].row, column=col_num).fill = self.fill
        
-    def write_month_transactions(self, transactions_per_month_per_category:dict) -> None:
+    def write_month_transactions(self) -> None:
         '''
         create excelsheets for all the months, and writes the categories and theri totals.
         Then calls the write_column_transactions function to fill out all the transactions per category
         '''
         self.open_workbook()
         
+
+        
         #per month, look at the categories for that month
-        for month , transactions_per_category in transactions_per_month_per_category.items():
+        for month , transactions_per_category in self.transactions_per_month_per_category.items():
             sheet_month = self.other_sheets__create_sheet_and_format_cells(month)
             sorted_transactions_per_category = dict(sorted(transactions_per_category.items(), key=lambda x: abs(x[1]["Totaal"]), reverse=True))
-    
+            self.row_nr_A = 6
+            self.row_nr_E = 2
+            self.row_nr_I = 2
             #per category, check the transactions
             for category, transaction_dict in sorted_transactions_per_category.items():
                 self.other_sheets__type_check(category, transaction_dict, sheet_month)
@@ -127,7 +132,7 @@ class WriteTransactionsToExcel:
         
         
         # get the first date and saldo, and last date and saldo, and the difference between the last saldo and the first saldo of the month.
-        list_of_transactions = self.transactions_per_month_per_category[month]        
+        list_of_transactions = self.transactions_per_month[month]        
         first_date = list_of_transactions[-1]
         last_date = list_of_transactions[0]
         first_saldo = first_date['Saldo na mutatie'] - first_date['Bedrag']
@@ -156,12 +161,11 @@ class WriteTransactionsToExcel:
         Based on this, picks a column and calls the write_column_transactions method to 
         write all the transactions for this category into that column
         '''
-        MAIN_CATEGORIE_DICT = self.save_load.data
-        row_nr_A = 6
+        
         color_A = 'BFBFBF'
-        row_nr_E = 2
+        
         color_B = 'FFD966'
-        row_nr_I = 2
+        
         color_C = 'A9D08E'
         json_dict = self.json_dict_obj.data
         type_check = json_dict[category]['type']
@@ -173,14 +177,14 @@ class WriteTransactionsToExcel:
         
         #determain the column to write the transaction to, based on the type of transaction
         if  type_check== "fixed cost":
-            row_nr_A = self.otehr_sheets__write_column_transactions(category, sheet_month, sorted_transaction_dict, row_nr_A, col_nr=1, color=color_A)
-            row_nr_A += 1
+            self.row_nr_A = self.otehr_sheets__write_column_transactions(category, sheet_month, sorted_transaction_dict, self.row_nr_A, col_nr=1, color=color_A)
+            self.row_nr_A += 1
         elif type_check== "returning cost":
-            row_nr_E = self.otehr_sheets__write_column_transactions(category, sheet_month, sorted_transaction_dict, row_nr_E, col_nr=5, color=color_B)
-            row_nr_E += 1
+            self.row_nr_E = self.otehr_sheets__write_column_transactions(category, sheet_month, sorted_transaction_dict, self.row_nr_E, col_nr=5, color=color_B)
+            self.row_nr_E += 1
         elif type_check== "exception cost":
-            row_nr_I = self.otehr_sheets__write_column_transactions(category, sheet_month, sorted_transaction_dict, row_nr_I, col_nr=9, color=color_C)
-            row_nr_I += 1
+            self.row_nr_I = self.otehr_sheets__write_column_transactions(category, sheet_month, sorted_transaction_dict, self.row_nr_I, col_nr=9, color=color_C)
+            self.row_nr_I += 1
         
     def otehr_sheets__write_column_transactions(self, category, sheet_month, transaction_dict, row_nr, col_nr, color) -> int:
         '''

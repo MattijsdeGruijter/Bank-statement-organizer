@@ -4,7 +4,6 @@ class JsonDictionaryManager:
     def __init__(self, json_filename):
         self.json_filename = json_filename
         self.data = None
-        self.load_dictionary_from_file()
 
     def load_dictionary_from_file(self):
         """
