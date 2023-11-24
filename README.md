@@ -122,5 +122,6 @@ For example:
 
 These 3 dictionaries are used to fill the output excel file.
 
+## GUI
 I've made a GUI as well where you can edit the sorting/categorizing dictionary to add keywords and categories. 
 I have not uploaded this part yet, still doing some testing. More on this later.
