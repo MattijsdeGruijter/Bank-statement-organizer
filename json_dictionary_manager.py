@@ -16,10 +16,13 @@ class JsonDictionaryManager:
             print(f"{self.json_filename} not found, creating empty dictionary")
             self.data = {}
 
-    def save_dictionary_to_file(self):
+    def save_dictionary_to_file(self, new_dict=None):
         """
         Save the dictionary to a JSON file.
         """
+        if new_dict is not None:
+            self.data = new_dict
+            
         if self.data is not None:
             with open(self.json_filename, "w") as file:
                 json.dump(self.data, file)
@@ -44,3 +47,11 @@ class JsonDictionaryManager:
         if key in self.data:
             del self.data[key]
             self.save_dictionary_to_file()
+            
+    def sort_keywords(self):
+        for category, dictionary in self.data.items():
+            dictionary["key_words"].sort()
+        sorted_keys = sorted(self.data.keys())
+        sorted_dict = {key: self.data[key] for key in sorted_keys}
+        self.data = sorted_dict
+        

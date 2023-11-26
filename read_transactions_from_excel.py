@@ -94,7 +94,7 @@ class ReadTransactionsFromExcel:
                         self.json_dictionary_manager.data[category]["total"] += self.float_precision(bedrag)  
                         self.json_dictionary_manager.save_dictionary_to_file()
                         return category 
-        return "Overschrijving"
+        return "Other"
 
             
     
